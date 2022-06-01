@@ -36,7 +36,7 @@ class Venue(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
-    genres = db.Column(db.ARRAY(db.String(120)), nullable=False, default=[]) # I wanted to use an array of enums but it is not well documented, relying on form validation
+    genres = db.Column(db.ARRAY(db.String(120)), nullable=False, default=[])
     city = db.Column(db.String(120), nullable=False)
     state = db.Column(db.String(120), nullable=False)
     address = db.Column(db.String(120), nullable=False)
@@ -399,22 +399,22 @@ def show_artist(artist_id):
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
-  form = ArtistForm()
-  artist={
-    "id": 4,
-    "name": "Guns N Petals",
-    "genres": ["Rock n Roll"],
-    "city": "San Francisco",
-    "state": "CA",
-    "phone": "326-123-5000",
-    "website": "https://www.gunsnpetalsband.com",
-    "facebook_link": "https://www.facebook.com/GunsNPetals",
-    "seeking_venue": True,
-    "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
-    "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
+  fetchedArtist = Artist.query.filter_by(id=artist_id).first()
+  parsedArtistData={
+    "id": artist_id,
+    "name": fetchedArtist.name,
+    "genres": fetchedArtist.genres,
+    "city": fetchedArtist.city,
+    "state": fetchedArtist.state,
+    "phone": fetchedArtist.phone,
+    "website_link": fetchedArtist.website,
+    "facebook_link": fetchedArtist.facebook_link,
+    "seeking_venue": fetchedArtist.seeking_venue,
+    "seeking_description": fetchedArtist.seeking_description,
+    "image_link": fetchedArtist.image_link,
   }
-  # TODO: populate form with fields from artist with ID <artist_id>
-  return render_template('forms/edit_artist.html', form=form, artist=artist)
+  form = ArtistForm(data=parsedArtistData)
+  return render_template('forms/edit_artist.html', form=form, artist=parsedArtistData)
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
@@ -425,23 +425,23 @@ def edit_artist_submission(artist_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
-  form = VenueForm()
-  venue={
-    "id": 1,
-    "name": "The Musical Hop",
-    "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
-    "address": "1015 Folsom Street",
-    "city": "San Francisco",
-    "state": "CA",
-    "phone": "123-123-1234",
-    "website": "https://www.themusicalhop.com",
-    "facebook_link": "https://www.facebook.com/TheMusicalHop",
-    "seeking_talent": True,
-    "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
-    "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60"
+  fetchedVenue = Venue.query.filter_by(id=venue_id).first()
+  parsedVenueData={
+    "id": venue_id,
+    "name": fetchedVenue.name,
+    "genres": fetchedVenue.genres,
+    "address": fetchedVenue.address,
+    "city": fetchedVenue.city,
+    "state": fetchedVenue.state,
+    "phone": fetchedVenue.phone,
+    "website_link": fetchedVenue.website,
+    "facebook_link": fetchedVenue.facebook_link,
+    "seeking_talent": fetchedVenue.seeking_talent,
+    "seeking_description": fetchedVenue.seeking_description,
+    "image_link": fetchedVenue.image_link,
   }
-  # TODO: populate form with values from venue with ID <venue_id>
-  return render_template('forms/edit_venue.html', form=form, venue=venue)
+  form = VenueForm(data=parsedVenueData)
+  return render_template('forms/edit_venue.html', form=form, venue=parsedVenueData)
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
