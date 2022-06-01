@@ -8,7 +8,7 @@ collections.Callable = collections.abc.Callable
 import json
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask import Flask, jsonify, render_template, request, Response, flash, redirect, url_for
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -16,6 +16,7 @@ import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
+from utils import *
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -242,15 +243,38 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-  # TODO: insert form data as a new Venue record in the db, instead
-  # TODO: modify data to be the data object returned from db insertion
-
-  # on successful db insert, flash success
-  flash('Venue ' + request.form['name'] + ' was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
-  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-  return render_template('pages/home.html')
+  error = False
+  context = {}
+  try:
+    name = request.form.get('name')
+    context['name'] = name
+    newVenue = Venue(
+      name = name,
+      genres = to_array(request.form.get('genres')),
+      address = request.form.get('address'),
+      city = request.form.get('city'),
+      state = request.form.get('state'),
+      phone = request.form.get('phone'),
+      website = request.form.get('website'),
+      facebook_link = request.form.get('facebook_link'),
+      seeking_talent = request.form.get('seeking_talent') or False,
+      seeking_description = request.form.get('seeking_description'),
+      image_link = request.form.get('image_link')
+    )
+    db.session.add(newVenue)
+    db.session.commit()
+  except:
+    error = True
+    db.session.rollback()
+  finally:
+    db.session.close()
+    if error:
+      # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+      flash('An error occurred. Venue ' + context['name'] + ' could not be added.')
+      return redirect(request.url)
+    else:
+      flash('Venue ' + context['name'] + ' was successfully listed!')
+      return render_template('pages/home.html')
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
