@@ -257,7 +257,7 @@ def create_venue_submission():
       phone = request.form.get('phone'),
       website = request.form.get('website'),
       facebook_link = request.form.get('facebook_link'),
-      seeking_talent = request.form.get('seeking_talent') or False,
+      seeking_talent = request.form.get('seeking_talent') == 'y',
       seeking_description = request.form.get('seeking_description'),
       image_link = request.form.get('image_link')
     )
@@ -273,7 +273,7 @@ def create_venue_submission():
       flash('An error occurred. Venue ' + context['name'] + ' could not be added.')
       return redirect(request.url)
     else:
-      flash('Venue ' + context['name'] + ' was successfully listed!')
+      flash('Venue ' + context['name'] + ' was successfully added!')
       return render_template('pages/home.html')
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
@@ -459,16 +459,37 @@ def create_artist_form():
 
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
-  # called upon submitting the new artist listing form
-  # TODO: insert form data as a new Venue record in the db, instead
-  # TODO: modify data to be the data object returned from db insertion
-
-  # on successful db insert, flash success
-  flash('Artist ' + request.form['name'] + ' was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
-  return render_template('pages/home.html')
-
+  error = False
+  context = {}
+  try:
+    name = request.form.get('name')
+    context['name'] = name
+    newArtist = Artist(
+    name = name,
+    genres = to_array(request.form.get('genres')),
+    city = request.form.get('city'),
+    state = request.form.get('state'),
+    phone = request.form.get('phone'),
+    website = request.form.get('website'),
+    facebook_link = request.form.get('facebook_link'),
+    seeking_venue = request.form.get('seeking_venue') == 'y',
+    seeking_description = request.form.get('seeking_description'),
+    image_link = request.form.get('image_link')
+    )
+    db.session.add(newArtist)
+    db.session.commit()
+  except:
+    error = True
+    db.session.rollback()
+  finally:
+    db.session.close()
+    if error:
+      # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+      flash('An error occurred. Artist ' + context['name'] + ' could not be added.')
+      return redirect(request.url)
+    else:
+      flash('Artist ' + context['name'] + ' was successfully added!')
+      return render_template('pages/home.html')
 
 #  Shows
 #  ----------------------------------------------------------------
