@@ -7,7 +7,10 @@ Create Date: 2022-05-31 18:24:23.870826
 """
 from alembic import op
 import sqlalchemy as sa
+from config import *
 
+engine = sa.create_engine(SQLALCHEMY_DATABASE_URI)
+insp = sa.inspect(engine)
 
 # revision identifiers, used by Alembic.
 revision = 'ab4163e7b77d'
@@ -49,8 +52,10 @@ def upgrade():
     sa.ForeignKeyConstraint(['venue_id'], ['venues.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.drop_table('Artist')
-    op.drop_table('Venue')
+    if insp.has_table('Artist', schema='dbo'):
+        op.drop_table('Artist')
+    if insp.has_table('Venue', schema='dbo'):
+        op.drop_table('Venue')
     # ### end Alembic commands ###
 
 
