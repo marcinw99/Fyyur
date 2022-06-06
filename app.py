@@ -416,7 +416,8 @@ def show_artist(artist_id):
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
-    fetchedArtist = Artist.query.filter_by(id=artist_id).first()
+    fetchedArtist = Artist.query.get(artist_id)
+
     parsedArtistData = {
         "id": artist_id,
         "name": fetchedArtist.name,
@@ -436,10 +437,42 @@ def edit_artist(artist_id):
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
-    # TODO: take values from the form submitted, and update existing
-    # artist record with ID <artist_id> using the new attributes
+    error = False
+    context = {}
 
-    return redirect(url_for('show_artist', artist_id=artist_id))
+    try:
+        artist = Artist.query.get(artist_id)
+        if artist is None:
+            abort(404)
+
+        context['oldName'] = artist.name
+        newName = request.form.get('name')
+        context['newName'] = newName
+        artist.name = newName
+        artist.genres = request.form.getlist('genres')
+        artist.address = request.form.get('address') # TODO implement?
+        artist.city = request.form.get('city')
+        artist.state = request.form.get('state')
+        artist.phone = request.form.get('phone')
+        artist.website_link = request.form.get('website_link')
+        artist.facebook_link = request.form.get('facebook_link')
+        artist.seeking_venue = request.form.get('seeking_venue') == 'y'
+        artist.seeking_description = request.form.get('seeking_description')
+        artist.image_link = request.form.get('image_link')
+
+        db.session.commit()
+    except:
+        error = True
+        db.session.rollback()
+    finally:
+        db.session.close()
+        if error:
+            # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+            flash('An error occurred. Artist ' + context['oldName'] + ' could not be edited.')
+            return redirect(request.url)
+        else:
+            flash('Artist ' + context['newName'] + ' was successfully edited!')
+            return redirect(url_for('show_artist', artist_id=artist_id))
 
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
@@ -504,7 +537,7 @@ def edit_venue_submission(venue_id):
             return redirect(request.url)
         else:
             flash('Venue ' + context['newName'] + ' was successfully edited!')
-            return redirect(url_for('show_venue', venue_id=1))
+            return redirect(url_for('show_venue', venue_id=venue_id))
 
 
 #  Create Artist
