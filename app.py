@@ -6,7 +6,6 @@ import collections
 import collections.abc
 
 collections.Callable = collections.abc.Callable
-import json
 import dateutil.parser
 import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort
@@ -259,6 +258,9 @@ def create_venue_submission():
     try:
         name = request.form.get('name')
         context['name'] = name
+        form = VenueForm(request.form)
+        if not form.validate():
+            raise ValueError('Form values are incorrect')
         newVenue = Venue(
             name=name,
             genres=request.form.getlist('genres'),
@@ -448,6 +450,11 @@ def edit_artist_submission(artist_id):
         context['oldName'] = artist.name
         newName = request.form.get('name')
         context['newName'] = newName
+
+        form = ArtistForm(request.form)
+        if not form.validate():
+            raise ValueError('Form values are incorrect')
+
         artist.name = newName
         artist.genres = request.form.getlist('genres')
         artist.address = request.form.get('address') # TODO implement?
@@ -513,6 +520,11 @@ def edit_venue_submission(venue_id):
         context['oldName'] = venue.name
         newName = request.form.get('name')
         context['newName'] = newName
+
+        form = VenueForm(request.form)
+        if not form.validate():
+            raise ValueError('Form values are incorrect')
+
         venue.name = newName
         venue.genres = request.form.getlist('genres')
         venue.address = request.form.get('address')
@@ -556,6 +568,9 @@ def create_artist_submission():
     try:
         name = request.form.get('name')
         context['name'] = name
+        form = ArtistForm(request.form)
+        if not form.validate():
+            raise ValueError('Form values are incorrect')
         newArtist = Artist(
             name=name,
             genres=request.form.getlist('genres'),
@@ -641,6 +656,9 @@ def create_shows():
 def create_show_submission():
     error = False
     try:
+        form = ShowForm(request.form)
+        if not form.validate():
+            raise ValueError('Form values are incorrect')
         newShow = Show(
             artist_id=request.form.get('artist_id'),
             venue_id=request.form.get('venue_id'),
