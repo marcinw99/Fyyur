@@ -44,7 +44,7 @@ class Venue(db.Model):
     address = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
     image_link = db.Column(db.String(500), nullable=False)
-    website = db.Column(db.String(120), nullable=True)
+    website_link = db.Column(db.String(120), nullable=True)
     facebook_link = db.Column(db.String(120), nullable=True)
     seeking_talent = db.Column(db.Boolean(), nullable=False)
     seeking_description = db.Column(db.String(500), nullable=True)
@@ -64,7 +64,7 @@ class Artist(db.Model):
     state = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(120), nullable=False)
     image_link = db.Column(db.String(500), nullable=False)
-    website = db.Column(db.String(120), nullable=True)
+    website_link = db.Column(db.String(120), nullable=True)
     facebook_link = db.Column(db.String(120), nullable=True)
     seeking_venue = db.Column(db.Boolean(), nullable=False)
     seeking_description = db.Column(db.String(500), nullable=True)
@@ -170,7 +170,7 @@ def show_venue(venue_id):
         "city": "San Francisco",
         "state": "CA",
         "phone": "123-123-1234",
-        "website": "https://www.themusicalhop.com",
+        "website_link": "https://www.themusicalhop.com",
         "facebook_link": "https://www.facebook.com/TheMusicalHop",
         "seeking_talent": True,
         "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
@@ -193,7 +193,7 @@ def show_venue(venue_id):
         "city": "New York",
         "state": "NY",
         "phone": "914-003-1132",
-        "website": "https://www.theduelingpianos.com",
+        "website_link": "https://www.theduelingpianos.com",
         "facebook_link": "https://www.facebook.com/theduelingpianos",
         "seeking_talent": False,
         "image_link": "https://images.unsplash.com/photo-1497032205916-ac775f0649ae?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=750&q=80",
@@ -210,7 +210,7 @@ def show_venue(venue_id):
         "city": "San Francisco",
         "state": "CA",
         "phone": "415-000-1234",
-        "website": "https://www.parksquarelivemusicandcoffee.com",
+        "website_link": "https://www.parksquarelivemusicandcoffee.com",
         "facebook_link": "https://www.facebook.com/ParkSquareLiveMusicAndCoffee",
         "seeking_talent": False,
         "image_link": "https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",
@@ -266,7 +266,7 @@ def create_venue_submission():
             city=request.form.get('city'),
             state=request.form.get('state'),
             phone=request.form.get('phone'),
-            website=request.form.get('website'),
+            website_link=request.form.get('website_link'),
             facebook_link=request.form.get('facebook_link'),
             seeking_talent=request.form.get('seeking_talent') == 'y',
             seeking_description=request.form.get('seeking_description'),
@@ -344,7 +344,7 @@ def show_artist(artist_id):
         "city": "San Francisco",
         "state": "CA",
         "phone": "326-123-5000",
-        "website": "https://www.gunsnpetalsband.com",
+        "website_link": "https://www.gunsnpetalsband.com",
         "facebook_link": "https://www.facebook.com/GunsNPetals",
         "seeking_venue": True,
         "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
@@ -424,7 +424,7 @@ def edit_artist(artist_id):
         "city": fetchedArtist.city,
         "state": fetchedArtist.state,
         "phone": fetchedArtist.phone,
-        "website_link": fetchedArtist.website,
+        "website_link": fetchedArtist.website_link,
         "facebook_link": fetchedArtist.facebook_link,
         "seeking_venue": fetchedArtist.seeking_venue,
         "seeking_description": fetchedArtist.seeking_description,
@@ -457,7 +457,7 @@ def edit_venue(venue_id):
         "city": fetchedVenue.city,
         "state": fetchedVenue.state,
         "phone": fetchedVenue.phone,
-        "website_link": fetchedVenue.website,
+        "website_link": fetchedVenue.website_link,
         "facebook_link": fetchedVenue.facebook_link,
         "seeking_talent": fetchedVenue.seeking_talent,
         "seeking_description": fetchedVenue.seeking_description,
@@ -486,7 +486,7 @@ def edit_venue_submission(venue_id):
         venue.city = request.form.get('city')
         venue.state = request.form.get('state')
         venue.phone = request.form.get('phone')
-        venue.website = request.form.get('website')
+        venue.website_link = request.form.get('website_link')
         venue.facebook_link = request.form.get('facebook_link')
         venue.seeking_talent = request.form.get('seeking_talent') == 'y'
         venue.seeking_description = request.form.get('seeking_description')
@@ -529,7 +529,7 @@ def create_artist_submission():
             city=request.form.get('city'),
             state=request.form.get('state'),
             phone=request.form.get('phone'),
-            website=request.form.get('website'),
+            website_link=request.form.get('website_link'),
             facebook_link=request.form.get('facebook_link'),
             seeking_venue=request.form.get('seeking_venue') == 'y',
             seeking_description=request.form.get('seeking_description'),
