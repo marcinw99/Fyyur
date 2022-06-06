@@ -17,7 +17,6 @@ import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
-from utils import *
 
 # ----------------------------------------------------------------------------#
 # App Config.
@@ -262,7 +261,7 @@ def create_venue_submission():
         context['name'] = name
         newVenue = Venue(
             name=name,
-            genres=to_array(request.form.get('genres')),
+            genres=request.form.getlist('genres'),
             address=request.form.get('address'),
             city=request.form.get('city'),
             state=request.form.get('state'),
@@ -526,7 +525,7 @@ def create_artist_submission():
         context['name'] = name
         newArtist = Artist(
             name=name,
-            genres=to_array(request.form.get('genres')),
+            genres=request.form.getlist('genres'),
             city=request.form.get('city'),
             state=request.form.get('state'),
             phone=request.form.get('phone'),
