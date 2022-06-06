@@ -21,7 +21,7 @@ def upgrade():
                     existing_type=sa.VARCHAR(length=120),
                     type_=sa.String(length=20),
                     existing_nullable=False)
-    op.alter_column('artist', 'genres',
+    op.alter_column('artists', 'genres',
                     existing_type=sa.String(length=120),
                     type=sa.ARRAY(sa.String(length=120)),
                     existing_nullable=False)
@@ -34,7 +34,7 @@ def downgrade():
                     existing_type=sa.String(length=20),
                     type_=sa.VARCHAR(length=120),
                     existing_nullable=False)
-    op.alter_column('artist', 'genres',
+    op.alter_column('artists', 'genres',
                     existing_type=sa.ARRAY(sa.String(length=120)),
                     type=sa.String(length=120),
                     existing_nullable=False)
