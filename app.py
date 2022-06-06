@@ -457,7 +457,7 @@ def edit_artist_submission(artist_id):
 
         artist.name = newName
         artist.genres = request.form.getlist('genres')
-        artist.address = request.form.get('address') # TODO implement?
+        artist.address = request.form.get('address')
         artist.city = request.form.get('city')
         artist.state = request.form.get('state')
         artist.phone = request.form.get('phone')
