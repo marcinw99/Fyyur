@@ -9,7 +9,7 @@ collections.Callable = collections.abc.Callable
 import json
 import dateutil.parser
 import babel
-from flask import Flask, jsonify, render_template, request, Response, flash, redirect, url_for
+from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -445,7 +445,11 @@ def edit_artist_submission(artist_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
-    fetchedVenue = Venue.query.filter_by(id=venue_id).first()
+    fetchedVenue = Venue.query.get(venue_id)
+
+    if fetchedVenue is None:
+        abort(404)
+
     parsedVenueData = {
         "id": venue_id,
         "name": fetchedVenue.name,
@@ -466,9 +470,42 @@ def edit_venue(venue_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
-    # TODO: take values from the form submitted, and update existing
-    # venue record with ID <venue_id> using the new attributes
-    return redirect(url_for('show_venue', venue_id=venue_id))
+    error = False
+    context = {}
+
+    try:
+        venue = Venue.query.get(venue_id)
+        if venue is None:
+            abort(404)
+
+        context['oldName'] = venue.name
+        newName = request.form.get('name')
+        context['newName'] = newName
+        venue.name = newName
+        venue.genres = request.form.getlist('genres')
+        venue.address = request.form.get('address')
+        venue.city = request.form.get('city')
+        venue.state = request.form.get('state')
+        venue.phone = request.form.get('phone')
+        venue.website = request.form.get('website')
+        venue.facebook_link = request.form.get('facebook_link')
+        venue.seeking_talent = request.form.get('seeking_talent') == 'y'
+        venue.seeking_description = request.form.get('seeking_description')
+        venue.image_link = request.form.get('image_link')
+
+        db.session.commit()
+    except:
+        error = True
+        db.session.rollback()
+    finally:
+        db.session.close()
+        if error:
+            # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+            flash('An error occurred. Venue ' + context['oldName'] + ' could not be edited.')
+            return redirect(request.url)
+        else:
+            flash('Venue ' + context['newName'] + ' was successfully edited!')
+            return redirect(url_for('show_venue', venue_id=1))
 
 
 #  Create Artist
