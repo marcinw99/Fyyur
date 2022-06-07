@@ -7,14 +7,15 @@ from enums import *
 phone_regexp_validator = Regexp("^[0-9]*$", message="Phone number should only contain digits")
 
 
-def coerce_for_enum(enum):
-    def coerce(name):
-        if isinstance(name, enum):
-            return name
+def coerce_for_enum(target_enum):
+    def coerce(value):
+        if isinstance(value, target_enum):
+            return value
         try:
-            return enum[name]
+            if target_enum[value] is not None:
+                return value
         except KeyError:
-            raise ValueError(name)
+            raise ValueError(value)
 
     return coerce
 
