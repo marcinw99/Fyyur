@@ -248,12 +248,15 @@ def create_venue_form():
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
     error = False
+    errorMessages = []
     context = {}
     try:
         name = request.form.get('name')
         context['name'] = name
         form = VenueForm(request.form)
         if not form.validate():
+            for formError in form.errors:
+                errorMessages.append(formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
         newVenue = Venue(
             name=name,
@@ -276,8 +279,11 @@ def create_venue_submission():
     finally:
         db.session.close()
         if error:
-            # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-            flash('An error occurred. Venue ' + context['name'] + ' could not be added.')
+            if len(errorMessages) > 0:
+                for message in errorMessages:
+                    flash(message)
+            else:
+                flash('An error occurred. Venue ' + context['name'] + ' could not be added.')
             return redirect(request.url)
         else:
             flash('Venue ' + context['name'] + ' was successfully added!')
@@ -434,6 +440,7 @@ def edit_artist(artist_id):
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
     error = False
+    errorMessages = []
     context = {}
 
     try:
@@ -447,6 +454,8 @@ def edit_artist_submission(artist_id):
 
         form = ArtistForm(request.form)
         if not form.validate():
+            for formError in form.errors:
+                errorMessages.append(formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
 
         artist.name = newName
@@ -468,8 +477,11 @@ def edit_artist_submission(artist_id):
     finally:
         db.session.close()
         if error:
-            # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-            flash('An error occurred. Artist ' + context['oldName'] + ' could not be edited.')
+            if len(errorMessages) > 0:
+                for message in errorMessages:
+                    flash(message)
+            else:
+                flash('An error occurred. Artist ' + context['oldName'] + ' could not be edited.')
             return redirect(request.url)
         else:
             flash('Artist ' + context['newName'] + ' was successfully edited!')
@@ -504,6 +516,7 @@ def edit_venue(venue_id):
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
     error = False
+    errorMessages = []
     context = {}
 
     try:
@@ -517,6 +530,8 @@ def edit_venue_submission(venue_id):
 
         form = VenueForm(request.form)
         if not form.validate():
+            for formError in form.errors:
+                errorMessages.append(formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
 
         venue.name = newName
@@ -538,8 +553,11 @@ def edit_venue_submission(venue_id):
     finally:
         db.session.close()
         if error:
-            # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-            flash('An error occurred. Venue ' + context['oldName'] + ' could not be edited.')
+            if len(errorMessages) > 0:
+                for message in errorMessages:
+                    flash(message)
+            else:
+                flash('An error occurred. Venue ' + context['oldName'] + ' could not be edited.')
             return redirect(request.url)
         else:
             flash('Venue ' + context['newName'] + ' was successfully edited!')
@@ -558,12 +576,15 @@ def create_artist_form():
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
     error = False
+    errorMessages = []
     context = {}
     try:
         name = request.form.get('name')
         context['name'] = name
         form = ArtistForm(request.form)
         if not form.validate():
+            for formError in form.errors:
+                errorMessages.append(formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
         newArtist = Artist(
             name=name,
@@ -585,8 +606,11 @@ def create_artist_submission():
     finally:
         db.session.close()
         if error:
-            # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-            flash('An error occurred. Artist ' + context['name'] + ' could not be added.')
+            if len(errorMessages) > 0:
+                for message in errorMessages:
+                    flash(message)
+            else:
+                flash('An error occurred. Artist ' + context['name'] + ' could not be added.')
             return redirect(request.url)
         else:
             flash('Artist ' + context['name'] + ' was successfully added!')
@@ -649,9 +673,12 @@ def create_shows():
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
     error = False
+    errorMessages = []
     try:
         form = ShowForm(request.form)
         if not form.validate():
+            for formError in form.errors:
+                errorMessages.append(formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
         newShow = Show(
             artist_id=request.form.get('artist_id'),
@@ -666,8 +693,11 @@ def create_show_submission():
     finally:
         db.session.close()
         if error:
-            # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-            flash('An error occurred. Show could not be listed.')
+            if len(errorMessages) > 0:
+                for message in errorMessages:
+                    flash(message)
+            else:
+                flash('An error occurred. Show could not be listed.')
             return redirect(request.url)
         else:
             flash('Show was successfully added!')
