@@ -11,6 +11,7 @@ import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from flask_migrate import Migrate
 import logging
 from logging import Formatter, FileHandler
@@ -126,31 +127,31 @@ def index():
 
 @app.route('/venues')
 def venues():
-    dbResponse = Venue.query.all()
-    # TODO: replace with real venues data.
-    #       num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
-    data = [{
-        "city": "San Francisco",
-        "state": "CA",
-        "venues": [{
-            "id": 1,
-            "name": "The Musical Hop",
-            "num_upcoming_shows": 0,
-        }, {
-            "id": 3,
-            "name": "Park Square Live Music & Coffee",
-            "num_upcoming_shows": 1,
-        }]
-    }, {
-        "city": "New York",
-        "state": "NY",
-        "venues": [{
-            "id": 2,
-            "name": "The Dueling Pianos Bar",
-            "num_upcoming_shows": 0,
-        }]
-    }]
-    return render_template('pages/venues.html', areas=data)
+    areas_query = db.session.query(Venue.city, Venue.state).distinct(Venue.city, Venue.state).order_by(
+        Venue.state).all()
+
+    areas = []
+
+    for area in areas_query:
+        venues_query = Venue.query.filter_by(state=area.state, city=area.city).order_by(Venue.name).all()
+
+        area_venues = []
+        for venue in venues_query:
+            num_upcoming_shows = db.session.query(func.count(Show.id)).filter_by(venue_id=venue.id).all()[0][0]
+
+            area_venues.append({
+                'id': venue.id,
+                'name': venue.name,
+                'num_upcoming_shows': num_upcoming_shows
+            })
+
+        areas.append({
+            'city': area.city,
+            'state': area.state,
+            'venues': area_venues
+        })
+
+    return render_template('pages/venues.html', areas=areas)
 
 
 @app.route('/venues/search', methods=['POST'])
@@ -179,6 +180,7 @@ def show_venue(venue_id):
     if venue is None:
         abort(404)
 
+    # TODO: try query(Show) to not be forced to handle tuples
     past_shows_query = db.session.query(Venue, Show).join(Venue).filter(
         Show.venue_id == venue_id,
         Show.start_time < time_now
