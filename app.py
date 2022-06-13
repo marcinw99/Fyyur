@@ -188,18 +188,15 @@ def show_venue(venue_id):
     if venue is None:
         abort(404)
 
-    # TODO: try query(Show) to not be forced to handle tuples
-    past_shows_query = db.session.query(Venue, Show).join(Venue).filter(
+    past_shows = db.session.query(Show).join(Venue).filter(
         Show.venue_id == venue_id,
         Show.start_time < time_now
     ).all()
-    past_shows = [result[1] for result in past_shows_query]
 
-    upcoming_shows_query = db.session.query(Venue, Show).join(Venue).filter(
+    upcoming_shows = db.session.query(Show).join(Venue).filter(
         Show.venue_id == venue_id,
         Show.start_time >= time_now
     ).all()
-    upcoming_shows = [result[1] for result in upcoming_shows_query]
 
     return render_template('pages/show_venue.html', venue=get_venue_page_payload(
         venue=venue,
@@ -315,17 +312,15 @@ def show_artist(artist_id):
     if artist is None:
         abort(404)
 
-    past_shows_query = db.session.query(Artist, Show).join(Artist).filter(
+    past_shows = db.session.query(Show).join(Artist).filter(
         Show.artist_id == artist_id,
         Show.start_time < time_now
     ).all()
-    past_shows = [result[1] for result in past_shows_query]
 
-    upcoming_shows_query = db.session.query(Artist, Show).join(Artist).filter(
+    upcoming_shows = db.session.query(Show).join(Artist).filter(
         Show.artist_id == artist_id,
         Show.start_time >= time_now
     ).all()
-    upcoming_shows = [result[1] for result in upcoming_shows_query]
 
     return render_template('pages/show_artist.html', artist=get_artist_page_payload(
         artist=artist,
