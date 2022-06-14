@@ -1,5 +1,15 @@
-from app import db
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+
 from constants import STRFTIME_FORMAT
+
+# https://knowledge.udacity.com/questions/89940
+app = Flask(__name__)
+app.config.from_object('config')
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
 
 class Venue(db.Model):
     __tablename__ = 'venues'
