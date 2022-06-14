@@ -8,7 +8,7 @@ import collections.abc
 collections.Callable = collections.abc.Callable
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort
+from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort, jsonify, make_response
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
@@ -198,12 +198,30 @@ def create_venue_submission():
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
-    # TODO: Complete this endpoint for taking a venue_id, and using
-    # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
+    error = False
+    context = {}
 
-    # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
-    # clicking that button delete it from the db then redirect the user to the homepage
-    return None
+    try:
+        venue = db.session.query(Venue).filter(Venue.id == venue_id).first()
+        print(venue)
+        if venue is None:
+            raise ValueError('Venue with this id does not exist.')
+        context['name'] = venue.name
+        db.session.delete(venue)
+        db.session.commit()
+    except:
+        error = True
+        db.session.rollback()
+    finally:
+        db.session.close()
+
+        if error:
+            flash('An error occurred. Venue could not be deleted.')
+            # For some reason this still returns 200
+            return make_response(jsonify({'success': False}), 404)
+        else:
+            flash('Venue ' + context['name'] + ' was successfully deleted!')
+            return jsonify({'success': True})
 
 
 #  Artists
