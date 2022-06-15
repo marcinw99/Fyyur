@@ -159,28 +159,20 @@ def create_venue_submission():
     error = False
     errorMessages = []
     context = {}
+    form = VenueForm(request.form)
     try:
         name = request.form.get('name')
         context['name'] = name
-        form = VenueForm(request.form)
         if not form.validate():
             for formError in form.errors:
                 errorMessages.append(
                     formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
-        newVenue = Venue(
-            name=name,
-            genres=request.form.getlist('genres'),
-            address=request.form.get('address'),
-            city=request.form.get('city'),
-            state=request.form.get('state'),
-            phone=request.form.get('phone'),
-            website_link=request.form.get('website_link'),
-            facebook_link=request.form.get('facebook_link'),
-            seeking_talent=request.form.get('seeking_talent') == 'y',
-            seeking_description=request.form.get('seeking_description'),
-            image_link=request.form.get('image_link')
-        )
+        newVenue = Venue()
+        # populate_obj is very useful, but the validation still worked correctly
+        # when I used Venue(name=request.form.get('name')....) and then
+        # called form.validate()
+        form.populate_obj(newVenue)
         db.session.add(newVenue)
         db.session.commit()
     except:
@@ -281,24 +273,12 @@ def show_artist(artist_id):
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
-    fetchedArtist = Artist.query.get(artist_id)
+    artist = Artist.query.get_or_404(artist_id)
 
-    parsedArtistData = {
-        "id": artist_id,
-        "name": fetchedArtist.name,
-        "genres": fetchedArtist.genres,
-        "city": fetchedArtist.city,
-        "state": fetchedArtist.state,
-        "phone": fetchedArtist.phone,
-        "website_link": fetchedArtist.website_link,
-        "facebook_link": fetchedArtist.facebook_link,
-        "seeking_venue": fetchedArtist.seeking_venue,
-        "seeking_description": fetchedArtist.seeking_description,
-        "image_link": fetchedArtist.image_link,
-    }
-    form = ArtistForm(data=parsedArtistData)
+    form = ArtistForm(obj=artist)
+
     return render_template('forms/edit_artist.html', form=form,
-                           artist=parsedArtistData)
+                           artist=artist)
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
@@ -447,27 +427,17 @@ def create_artist_submission():
     error = False
     errorMessages = []
     context = {}
+    form = ArtistForm(request.form)
     try:
         name = request.form.get('name')
         context['name'] = name
-        form = ArtistForm(request.form)
         if not form.validate():
             for formError in form.errors:
                 errorMessages.append(
                     formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
-        newArtist = Artist(
-            name=name,
-            genres=request.form.getlist('genres'),
-            city=request.form.get('city'),
-            state=request.form.get('state'),
-            phone=request.form.get('phone'),
-            website_link=request.form.get('website_link'),
-            facebook_link=request.form.get('facebook_link'),
-            seeking_venue=request.form.get('seeking_venue') == 'y',
-            seeking_description=request.form.get('seeking_description'),
-            image_link=request.form.get('image_link')
-        )
+        newArtist = Artist()
+        form.populate_obj(newArtist)
         db.session.add(newArtist)
         db.session.commit()
     except:
@@ -528,18 +498,15 @@ def create_shows():
 def create_show_submission():
     error = False
     errorMessages = []
+    form = ShowForm(request.form)
     try:
-        form = ShowForm(request.form)
         if not form.validate():
             for formError in form.errors:
                 errorMessages.append(
                     formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
-        newShow = Show(
-            artist_id=request.form.get('artist_id'),
-            venue_id=request.form.get('venue_id'),
-            start_time=datetime.fromisoformat(request.form.get('start_time'))
-        )
+        newShow = Show()
+        form.populate_obj(newShow)
         db.session.add(newShow)
         db.session.commit()
     except:
