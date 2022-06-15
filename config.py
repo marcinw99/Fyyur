@@ -12,3 +12,6 @@ SQLALCHEMY_DATABASE_URI = 'postgresql://postgres@localhost:5432/fyyur'
 
 # Silence the error
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+# See SQL output
+# SQLALCHEMY_ECHO = True

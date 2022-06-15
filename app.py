@@ -136,29 +136,13 @@ def search_venues():
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
-    time_now = datetime.now()
-
     venue = Venue.query.filter(Venue.id == venue_id).one_or_none()
 
     if venue is None:
         abort(404)
 
-    past_shows = db.session.query(Show).join(Venue).filter(
-        Show.venue_id == venue_id,
-        Show.start_time < time_now
-    ).all()
-
-    upcoming_shows = db.session.query(Show).join(Venue).filter(
-        Show.venue_id == venue_id,
-        Show.start_time >= time_now
-    ).all()
-
     return render_template('pages/show_venue.html',
-                           venue=get_venue_page_payload(
-                               venue=venue,
-                               past_shows=past_shows,
-                               upcoming_shows=upcoming_shows
-                           ))
+                           venue=get_venue_page_payload(venue=venue))
 
 
 #  Create Venue
@@ -224,7 +208,6 @@ def delete_venue(venue_id):
 
     try:
         venue = db.session.query(Venue).filter(Venue.id == venue_id).first()
-        print(venue)
         if venue is None:
             raise ValueError('Venue with this id does not exist.')
         context['name'] = venue.name
@@ -285,29 +268,13 @@ def search_artists():
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-    time_now = datetime.now()
-
     artist = Artist.query.filter(Artist.id == artist_id).one_or_none()
 
     if artist is None:
         abort(404)
 
-    past_shows = db.session.query(Show).join(Artist).filter(
-        Show.artist_id == artist_id,
-        Show.start_time < time_now
-    ).all()
-
-    upcoming_shows = db.session.query(Show).join(Artist).filter(
-        Show.artist_id == artist_id,
-        Show.start_time >= time_now
-    ).all()
-
     return render_template('pages/show_artist.html',
-                           artist=get_artist_page_payload(
-                               artist=artist,
-                               past_shows=past_shows,
-                               upcoming_shows=upcoming_shows
-                           ))
+                           artist=get_artist_page_payload(artist=artist))
 
 
 #  Update
