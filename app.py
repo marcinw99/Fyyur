@@ -8,7 +8,18 @@ import collections.abc
 collections.Callable = collections.abc.Callable
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort, jsonify, make_response
+from flask import (
+    Flask,
+    render_template,
+    request,
+    Response,
+    flash,
+    redirect,
+    url_for,
+    abort,
+    jsonify,
+    make_response
+)
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
@@ -28,7 +39,7 @@ from constants import STRFTIME_FORMAT
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
-db = SQLAlchemy(app)
+db.init_app(app)
 migrate = Migrate(app, db, compare_type=True)
 
 # ----------------------------------------------------------------------------#
@@ -44,7 +55,8 @@ date_formats = {
 def format_datetime(value, format='medium'):
     date = dateutil.parser.parse(value)
     computed_format = date_formats[format]
-    return babel.dates.format_datetime(date, format=computed_format, locale='en')
+    return babel.dates.format_datetime(date, format=computed_format,
+                                       locale='en')
 
 
 app.jinja_env.filters['datetime'] = format_datetime
@@ -64,28 +76,30 @@ def index():
 
 @app.route('/venues')
 def venues():
-    areas_query = db.session.query(Venue.city, Venue.state).distinct(Venue.city, Venue.state).order_by(
-        Venue.state).all()
+    places = Venue.query.distinct(Venue.city, Venue.state).order_by(
+        Venue.state
+    ).all()
 
     areas = []
 
-    for area in areas_query:
-        venues_query = Venue.query.filter_by(state=area.state, city=area.city).order_by(Venue.name).all()
-
-        area_venues = []
-        for venue in venues_query:
-            num_upcoming_shows = db.session.query(func.count(Show.id)).filter_by(venue_id=venue.id).all()[0][0]
-
-            area_venues.append({
-                'id': venue.id,
-                'name': venue.name,
-                'num_upcoming_shows': num_upcoming_shows
-            })
+    for place in places:
+        venues_query = Venue.query.filter_by(
+            state=place.state,
+            city=place.city
+        ).order_by(
+            Venue.name
+        ).all()
 
         areas.append({
-            'city': area.city,
-            'state': area.state,
-            'venues': area_venues
+            'city': place.city,
+            'state': place.state,
+            'venues': [{
+                'id': venue.id,
+                'name': venue.name,
+                'num_upcoming_shows': len([show for show in venue.shows if
+                                           show.start_time > datetime.now()])
+            } for venue in venues_query if
+                venue.city == place.city and venue.state == place.state]
         })
 
     return render_template('pages/venues.html', areas=areas)
@@ -95,12 +109,16 @@ def venues():
 def search_venues():
     search_term = request.form.get('search_term', '')
 
-    venues_query = db.session.query(Venue.id, Venue.name).filter(Venue.name.ilike(f'%{search_term}%')).all()
+    venues_query = db.session.query(Venue.id, Venue.name).filter(
+        Venue.name.ilike(f'%{search_term}%')
+    ).all()
 
     formatted_venues = []
 
     for venue in venues_query:
-        num_upcoming_shows = db.session.query(func.count(Show.id)).filter_by(venue_id=venue.id).all()[0][0]
+        num_upcoming_shows = db.session.query(func.count(Show.id)).filter_by(
+            venue_id=venue.id
+        ).all()[0][0]
 
         formatted_venues.append({
             "id": venue.id,
@@ -135,11 +153,12 @@ def show_venue(venue_id):
         Show.start_time >= time_now
     ).all()
 
-    return render_template('pages/show_venue.html', venue=get_venue_page_payload(
-        venue=venue,
-        past_shows=past_shows,
-        upcoming_shows=upcoming_shows
-    ))
+    return render_template('pages/show_venue.html',
+                           venue=get_venue_page_payload(
+                               venue=venue,
+                               past_shows=past_shows,
+                               upcoming_shows=upcoming_shows
+                           ))
 
 
 #  Create Venue
@@ -162,7 +181,8 @@ def create_venue_submission():
         form = VenueForm(request.form)
         if not form.validate():
             for formError in form.errors:
-                errorMessages.append(formError + ': ' + form.errors[formError][0])
+                errorMessages.append(
+                    formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
         newVenue = Venue(
             name=name,
@@ -189,7 +209,8 @@ def create_venue_submission():
                 for message in errorMessages:
                     flash(message)
             else:
-                flash('An error occurred. Venue ' + context['name'] + ' could not be added.')
+                flash('An error occurred. Venue ' + context[
+                    'name'] + ' could not be added.')
             return redirect(request.url)
         else:
             flash('Venue ' + context['name'] + ' was successfully added!')
@@ -236,12 +257,16 @@ def artists():
 def search_artists():
     search_term = request.form.get('search_term', '')
 
-    artists_query = db.session.query(Artist.id, Artist.name).filter(Artist.name.ilike(f'%{search_term}%')).all()
+    artists_query = db.session.query(Artist.id, Artist.name).filter(
+        Artist.name.ilike(f'%{search_term}%')
+    ).all()
 
     formatted_artists = []
 
     for artist in artists_query:
-        num_upcoming_shows = db.session.query(func.count(Show.id)).filter_by(artist_id=artist.id).all()[0][0]
+        num_upcoming_shows = db.session.query(func.count(Show.id)).filter_by(
+            artist_id=artist.id
+        ).all()[0][0]
 
         formatted_artists.append({
             "id": artist.id,
@@ -277,11 +302,12 @@ def show_artist(artist_id):
         Show.start_time >= time_now
     ).all()
 
-    return render_template('pages/show_artist.html', artist=get_artist_page_payload(
-        artist=artist,
-        past_shows=past_shows,
-        upcoming_shows=upcoming_shows
-    ))
+    return render_template('pages/show_artist.html',
+                           artist=get_artist_page_payload(
+                               artist=artist,
+                               past_shows=past_shows,
+                               upcoming_shows=upcoming_shows
+                           ))
 
 
 #  Update
@@ -304,7 +330,8 @@ def edit_artist(artist_id):
         "image_link": fetchedArtist.image_link,
     }
     form = ArtistForm(data=parsedArtistData)
-    return render_template('forms/edit_artist.html', form=form, artist=parsedArtistData)
+    return render_template('forms/edit_artist.html', form=form,
+                           artist=parsedArtistData)
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
@@ -325,7 +352,8 @@ def edit_artist_submission(artist_id):
         form = ArtistForm(request.form)
         if not form.validate():
             for formError in form.errors:
-                errorMessages.append(formError + ': ' + form.errors[formError][0])
+                errorMessages.append(
+                    formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
 
         artist.name = newName
@@ -351,7 +379,8 @@ def edit_artist_submission(artist_id):
                 for message in errorMessages:
                     flash(message)
             else:
-                flash('An error occurred. Artist ' + context['oldName'] + ' could not be edited.')
+                flash('An error occurred. Artist ' + context[
+                    'oldName'] + ' could not be edited.')
             return redirect(request.url)
         else:
             flash('Artist ' + context['newName'] + ' was successfully edited!')
@@ -380,7 +409,8 @@ def edit_venue(venue_id):
         "image_link": fetchedVenue.image_link,
     }
     form = VenueForm(data=parsedVenueData)
-    return render_template('forms/edit_venue.html', form=form, venue=parsedVenueData)
+    return render_template('forms/edit_venue.html', form=form,
+                           venue=parsedVenueData)
 
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
@@ -401,7 +431,8 @@ def edit_venue_submission(venue_id):
         form = VenueForm(request.form)
         if not form.validate():
             for formError in form.errors:
-                errorMessages.append(formError + ': ' + form.errors[formError][0])
+                errorMessages.append(
+                    formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
 
         venue.name = newName
@@ -427,7 +458,8 @@ def edit_venue_submission(venue_id):
                 for message in errorMessages:
                     flash(message)
             else:
-                flash('An error occurred. Venue ' + context['oldName'] + ' could not be edited.')
+                flash('An error occurred. Venue ' + context[
+                    'oldName'] + ' could not be edited.')
             return redirect(request.url)
         else:
             flash('Venue ' + context['newName'] + ' was successfully edited!')
@@ -454,7 +486,8 @@ def create_artist_submission():
         form = ArtistForm(request.form)
         if not form.validate():
             for formError in form.errors:
-                errorMessages.append(formError + ': ' + form.errors[formError][0])
+                errorMessages.append(
+                    formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
         newArtist = Artist(
             name=name,
@@ -480,7 +513,8 @@ def create_artist_submission():
                 for message in errorMessages:
                     flash(message)
             else:
-                flash('An error occurred. Artist ' + context['name'] + ' could not be added.')
+                flash('An error occurred. Artist ' + context[
+                    'name'] + ' could not be added.')
             return redirect(request.url)
         else:
             flash('Artist ' + context['name'] + ' was successfully added!')
@@ -531,7 +565,8 @@ def create_show_submission():
         form = ShowForm(request.form)
         if not form.validate():
             for formError in form.errors:
-                errorMessages.append(formError + ': ' + form.errors[formError][0])
+                errorMessages.append(
+                    formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
         newShow = Show(
             artist_id=request.form.get('artist_id'),
@@ -570,7 +605,8 @@ def server_error(error):
 if not app.debug:
     file_handler = FileHandler('error.log')
     file_handler.setFormatter(
-        Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
+        Formatter(
+            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
     )
     app.logger.setLevel(logging.INFO)
     file_handler.setLevel(logging.INFO)
