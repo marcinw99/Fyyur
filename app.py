@@ -336,28 +336,12 @@ def edit_artist_submission(artist_id):
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
-    fetchedVenue = Venue.query.get(venue_id)
+    venue = Venue.query.get_or_404(venue_id)
 
-    if fetchedVenue is None:
-        abort(404)
+    form = VenueForm(obj=venue)
 
-    parsedVenueData = {
-        "id": venue_id,
-        "name": fetchedVenue.name,
-        "genres": fetchedVenue.genres,
-        "address": fetchedVenue.address,
-        "city": fetchedVenue.city,
-        "state": fetchedVenue.state,
-        "phone": fetchedVenue.phone,
-        "website_link": fetchedVenue.website_link,
-        "facebook_link": fetchedVenue.facebook_link,
-        "seeking_talent": fetchedVenue.seeking_talent,
-        "seeking_description": fetchedVenue.seeking_description,
-        "image_link": fetchedVenue.image_link,
-    }
-    form = VenueForm(data=parsedVenueData)
     return render_template('forms/edit_venue.html', form=form,
-                           venue=parsedVenueData)
+                           venue=venue)
 
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
