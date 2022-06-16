@@ -56,7 +56,9 @@ class Show(db.Model):
         return {
             'id': self.id,
             'artist_id': self.artist_id,
+            'artist_name': self.artist.name,
             'venue_id': self.venue_id,
+            'venue_name': self.venue.name,
             'venue_image_link': self.venue.image_link,
             'artist_image_link': self.artist.image_link,
             'start_time': self.start_time.strftime(STRFTIME_FORMAT)

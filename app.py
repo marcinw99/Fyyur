@@ -42,6 +42,8 @@ app.config.from_object('config')
 db.init_app(app)
 migrate = Migrate(app, db, compare_type=True)
 
+# Thank you for thorough review and good tips!
+
 # ----------------------------------------------------------------------------#
 # Filters.
 # ----------------------------------------------------------------------------#
@@ -109,21 +111,18 @@ def venues():
 def search_venues():
     search_term = request.form.get('search_term', '')
 
-    venues_query = db.session.query(Venue.id, Venue.name).filter(
+    venues_query = Venue.query.filter(
         Venue.name.ilike(f'%{search_term}%')
     ).all()
 
     formatted_venues = []
 
     for venue in venues_query:
-        num_upcoming_shows = db.session.query(func.count(Show.id)).filter_by(
-            venue_id=venue.id
-        ).all()[0][0]
-
         formatted_venues.append({
             "id": venue.id,
             "name": venue.name,
-            "num_upcoming_shows": num_upcoming_shows
+            "num_upcoming_shows": len([show for show in venue.shows if
+                                       show.start_time > datetime.now()])
         })
 
     results = {
@@ -169,9 +168,6 @@ def create_venue_submission():
                     formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
         newVenue = Venue()
-        # populate_obj is very useful, but the validation still worked correctly
-        # when I used Venue(name=request.form.get('name')....) and then
-        # called form.validate()
         form.populate_obj(newVenue)
         db.session.add(newVenue)
         db.session.commit()
@@ -232,23 +228,19 @@ def artists():
 def search_artists():
     search_term = request.form.get('search_term', '')
 
-    artists_query = db.session.query(Artist.id, Artist.name).filter(
+    artists_query = Artist.query.filter(
         Artist.name.ilike(f'%{search_term}%')
     ).all()
 
     formatted_artists = []
 
     for artist in artists_query:
-        num_upcoming_shows = db.session.query(func.count(Show.id)).filter_by(
-            artist_id=artist.id
-        ).all()[0][0]
-
         formatted_artists.append({
             "id": artist.id,
             "name": artist.name,
-            "num_upcoming_shows": num_upcoming_shows
+            "num_upcoming_shows": len([show for show in artist.shows if
+                                       show.start_time > datetime.now()])
         })
-
     results = {
         "count": len(formatted_artists),
         "data": formatted_artists
@@ -286,6 +278,7 @@ def edit_artist_submission(artist_id):
     error = False
     errorMessages = []
     context = {}
+    form = ArtistForm(request.form)
 
     try:
         artist = Artist.query.get(artist_id)
@@ -296,24 +289,13 @@ def edit_artist_submission(artist_id):
         newName = request.form.get('name')
         context['newName'] = newName
 
-        form = ArtistForm(request.form)
         if not form.validate():
             for formError in form.errors:
                 errorMessages.append(
                     formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
 
-        artist.name = newName
-        artist.genres = request.form.getlist('genres')
-        artist.address = request.form.get('address')
-        artist.city = request.form.get('city')
-        artist.state = request.form.get('state')
-        artist.phone = request.form.get('phone')
-        artist.website_link = request.form.get('website_link')
-        artist.facebook_link = request.form.get('facebook_link')
-        artist.seeking_venue = request.form.get('seeking_venue') == 'y'
-        artist.seeking_description = request.form.get('seeking_description')
-        artist.image_link = request.form.get('image_link')
+        form.populate_obj(artist)
 
         db.session.commit()
     except:
@@ -349,7 +331,7 @@ def edit_venue_submission(venue_id):
     error = False
     errorMessages = []
     context = {}
-
+    form = VenueForm(request.form)
     try:
         venue = Venue.query.get(venue_id)
         if venue is None:
@@ -359,24 +341,13 @@ def edit_venue_submission(venue_id):
         newName = request.form.get('name')
         context['newName'] = newName
 
-        form = VenueForm(request.form)
         if not form.validate():
             for formError in form.errors:
                 errorMessages.append(
                     formError + ': ' + form.errors[formError][0])
             raise ValueError('Form values are incorrect')
 
-        venue.name = newName
-        venue.genres = request.form.getlist('genres')
-        venue.address = request.form.get('address')
-        venue.city = request.form.get('city')
-        venue.state = request.form.get('state')
-        venue.phone = request.form.get('phone')
-        venue.website_link = request.form.get('website_link')
-        venue.facebook_link = request.form.get('facebook_link')
-        venue.seeking_talent = request.form.get('seeking_talent') == 'y'
-        venue.seeking_description = request.form.get('seeking_description')
-        venue.image_link = request.form.get('image_link')
+        form.populate_obj(venue)
 
         db.session.commit()
     except:
@@ -447,29 +418,11 @@ def create_artist_submission():
 
 @app.route('/shows')
 def shows():
-    query = db.session.query(Show, Artist, Venue).join(Artist).filter(
-        Show.artist_id == Artist.id,
-        Show.venue_id == Venue.id
-    ).all()
+    shows_query = Show.query.all()
 
-    formatted_shows = []
-
-    for item in query:
-        show = item[0]
-        artist = item[1]
-        venue = item[2]
-
-        formatted_shows.append({
-            "venue_id": venue.id,
-            "venue_name": venue.name,
-            "artist_id": artist.id,
-            "artist_name": artist.name,
-            "artist_image_link": artist.image_link,
-            "start_time": show.start_time.strftime(STRFTIME_FORMAT)
-        })
+    formatted_shows = map(lambda item: item.format(), shows_query)
 
     return render_template('pages/shows.html', shows=formatted_shows)
-
 
 @app.route('/shows/create')
 def create_shows():
