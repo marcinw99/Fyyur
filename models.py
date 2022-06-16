@@ -57,5 +57,7 @@ class Show(db.Model):
             'id': self.id,
             'artist_id': self.artist_id,
             'venue_id': self.venue_id,
+            'venue_image_link': self.venue.image_link,
+            'artist_image_link': self.artist.image_link,
             'start_time': self.start_time.strftime(STRFTIME_FORMAT)
         }
